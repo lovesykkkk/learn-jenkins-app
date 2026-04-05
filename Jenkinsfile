@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-            reuseNode true
-        }
-    }
+    agent none
 
     environment {
         NETLIFY_SITE_ID = 'cdf8af0b-86bc-4179-b312-988e98013fa2'
@@ -12,8 +7,26 @@ pipeline {
     }
 
     stages {
+
+        stage('AWS') {
+            agent {
+                docker { 
+                    image 'amazon/aws-cli'
+                    // aws-cli 이미지는 기본적으로 실행 후 바로 종료되므로 엔트리포인트 무력화
+                    args "--entrypoint=''" 
+                }
+            }
+            steps {
+                sh 'aws --version'
+            }
+        }
+
+
         stage('Build') {
 
+            agent {
+                docker { image 'mcr.microsoft.com/playwright:v1.39.0-jammy' }
+            }
             
 
             steps {
@@ -30,6 +43,11 @@ pipeline {
         }
 
         stage('Test'){
+
+            agent {
+                docker { image 'mcr.microsoft.com/playwright:v1.39.0-jammy' }
+            }
+
             steps {
                 echo 'Test stage'
                 sh '''
@@ -40,6 +58,11 @@ pipeline {
         }
 
         stage('E2E'){
+
+            agent {
+                docker { image 'mcr.microsoft.com/playwright:v1.39.0-jammy' }
+            }
+
             steps {
                 sh '''
                    npm install serve
@@ -51,6 +74,10 @@ pipeline {
 
 
         stage('Deploy staging'){
+            agent {
+                docker { image 'node:18-bullseye' } 
+            }
+
             steps {
                 sh '''
                     npm install netlify-cli@20.1.1
@@ -63,6 +90,7 @@ pipeline {
         }
 
         stage('Approval'){
+            agent none
             steps{
                 timeout(time: 1, unit: 'MINUTES') {
                     input message: '운영 환경에 배포할까요?', ok: '네 배포합니다.'
@@ -77,6 +105,9 @@ pipeline {
 
 
         stage('Deploy prod'){
+            agent {
+                docker { image 'node:18-bullseye' } 
+            }
             steps {
                 sh '''
                     npm install netlify-cli@20.1.1
@@ -89,7 +120,9 @@ pipeline {
         }
 
         stage('Prod E2E'){
-
+            agent {
+                docker { image 'mcr.microsoft.com/playwright:v1.39.0-jammy' }
+            }
             environment {
                 CI_ENVIRONMENT_URL = 'https://poetic-frangipane-7ffc6c.netlify.app'
             }
@@ -99,12 +132,6 @@ pipeline {
                     npx playwright test --reporter=html
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            junit 'jest-results/junit.xml'
         }
     }
 }
