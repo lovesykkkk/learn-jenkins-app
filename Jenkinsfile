@@ -5,7 +5,7 @@ pipeline {
         REACT_APP_VERSION = "1.0.$BUILD_ID"
         APP_NAME = 'myjenkinsapp'
         AWS_DEFAULT_REGION = 'ap-northeast-2'
-        AWS_DOCKER_REGISTRY = '614388036068.dkr.ecr.ap-northeast-2.amazonaws.com/myjenkinsapp'
+        AWS_DOCKER_REGISTRY = '614388036068.dkr.ecr.ap-northeast-2.amazonaws.com'
         AWS_ECS_CLUSTER = 'hollow-rabbit-1mib6o'
         AWS_ECS_SERVICE_PROD = 'LearnJenkinsApp-Service-Prod'
         AWS_ECS_TD_PROD = 'LearnJenkinsApp-TaskDefinition-Prod3'
